@@ -41,7 +41,7 @@ public class Node implements Serializable {
     }
 
     public String getAddress() {
-        return address.getHostName();
+        return address.getAddress().getHostAddress();
     }
 
     public InetAddress getInetAddress() {
@@ -75,9 +75,8 @@ public class Node implements Serializable {
             System.out.println("Sequence number of current node " + this.getUniqueID() + " updated from "
                     + getSequenceNumber() + " to " + newSequenceNumber);
             heartbeatSequenceNumber = newSequenceNumber;
+            setLastUpdatedTime();
         }
-
-        setLastUpdatedTime();
     }
 
     public void incrementSequenceNumber() {

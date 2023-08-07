@@ -213,20 +213,20 @@ public class NodeManager {
     }
 
     private void sendGossipToRandomNode() {
-        self.incrementSequenceNumber();
         List<String> peersToUpdate = new ArrayList<>();
         Object[] keys = members.keySet().toArray();
         if (keys.length < config.peersToUpdatePerInterval) {
+            self.incrementSequenceNumber();
             for (int i = 0; i < keys.length; i++) {
                 String key = (String) keys[i];
-                if (!key.equals(self.getUniqueID())
-                        && !key.equals("/127.0.0.1:8000")) { //override hashcode to solve the double hostname problem
+                if (!key.equals(self.getUniqueID())) {
                     peersToUpdate.add(key);
                 }
             }
         } else {
             // to prevent sending duplicate messages to the same node
             HashMap<String, String> peers = new HashMap<>();
+            self.incrementSequenceNumber();
             for (int i = 0; i < config.peersToUpdatePerInterval; i++) {
                 boolean found = false;
                 while (!found) {
