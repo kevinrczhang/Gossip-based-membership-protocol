@@ -83,10 +83,10 @@ public class NodeManager {
 
             getAliveMembers().forEach(node ->
                     System.out.println("Health status: " + node.getHostName() + ":"
-                            + node.getPort() + "- alive"));
+                            + node.getPort() + " - alive"));
             getFailedMembers().forEach(node ->
                     System.out.println("Health status: " + node.getHostName() + ":"
-                            + node.getPort() + "- failed"));
+                            + node.getPort() + " - failed"));
         }).start();
     }
 

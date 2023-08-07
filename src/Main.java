@@ -1,12 +1,14 @@
-import config.Config;
+/*import config.Config;
 import service.NodeManager;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
 
+// NOTE: You can change the address to actual addresses like 125.0.0.1, and that will require
+// wifi connection
 public class Main {
     public static void main(String[] args) {
-        int amount = 1000;
+        int amount = 5;
         Config config = new Config(
                 Duration.ofSeconds(4),
                 Duration.ofSeconds(3),
@@ -46,3 +48,4 @@ public class Main {
 
     }
 }
+*/
