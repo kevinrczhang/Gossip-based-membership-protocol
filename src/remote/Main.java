@@ -8,14 +8,20 @@ import java.time.Duration;
 
 public class Main {
     public static void main(String[] args) {
+        String listeningAddressStr;
+        int listeningPort;
+        String existingNodeAddressStr;
         if (args.length != 3) {
             System.err.println("Usage: java Main <new_node_address> <new_node_port> <existing_node_address>");
-            System.exit(1);
+            listeningAddressStr = "127.0.0.1";
+            listeningPort = 8000;
+            existingNodeAddressStr = "127.0.0.1:8000";
+        } else {
+            listeningAddressStr = args[0];
+            listeningPort = Integer.parseInt(args[1]);
+            existingNodeAddressStr = args[2];
         }
 
-        String listeningAddressStr = args[0];
-        int listeningPort = Integer.parseInt(args[1]);
-        String existingNodeAddressStr = args[2];
 
         InetSocketAddress listeningAddress = new InetSocketAddress(listeningAddressStr, listeningPort);
 

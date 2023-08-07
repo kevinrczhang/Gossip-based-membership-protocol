@@ -57,7 +57,7 @@ public class Socket {
                 e.printStackTrace();
             } catch (Exception e) {
                 e.printStackTrace();
-            }finally {
+            } finally {
                 objectInputStream.close();
                 return source;
             }
@@ -70,10 +70,11 @@ public class Socket {
     private byte[] getBytesToWrite(Node source) {
         ByteArrayOutputStream bstream = new ByteArrayOutputStream();
         System.out.println("Writing message " + source.getNetworkMessage());
-
+        // Object data = memberlist + source
         try {
             ObjectOutput out = new ObjectOutputStream(bstream);
             out.writeObject(source);
+            // out.writeObject(data);
             out.close();
         } catch (IOException e) {
             System.out.println("Could not send " + source.getNetworkMessage() + "\n");

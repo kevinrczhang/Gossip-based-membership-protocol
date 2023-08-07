@@ -186,7 +186,7 @@ public class NodeManager {
                 sourceNode.setConfig(config);
                 sourceNode.setLastUpdatedTime();
                 members.putIfAbsent(sourceNode.getUniqueID(), sourceNode);
-
+                // updateMemberShipListFromSourceNode();
                 if (onNewMember != null) {
                     onNewMember.update(sourceNode.getSocketAddress());
                 }
@@ -219,7 +219,8 @@ public class NodeManager {
         if (keys.length < config.peersToUpdatePerInterval) {
             for (int i = 0; i < keys.length; i++) {
                 String key = (String) keys[i];
-                if (!key.equals(self.getUniqueID())) {
+                if (!key.equals(self.getUniqueID())
+                        && !key.equals("/127.0.0.1:8000")) { //override hashcode to solve the double hostname problem
                     peersToUpdate.add(key);
                 }
             }
