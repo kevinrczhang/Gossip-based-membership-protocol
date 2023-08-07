@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.time.Duration;
 
+//TODO: implement NAK operation (ask for newest messages if not received after period of time)
 public class Node implements Serializable {
     // port number in a cluster, used for communication
     private final InetSocketAddress address;
@@ -76,6 +77,11 @@ public class Node implements Serializable {
                     + getSequenceNumber() + " to " + newSequenceNumber);
         }
 
+        setLastUpdatedTime();
+    }
+
+    public void incrementSequenceNumber() {
+        heartbeatSequenceNumber++;
         setLastUpdatedTime();
     }
 
