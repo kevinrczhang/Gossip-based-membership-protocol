@@ -53,6 +53,26 @@ public class NodeManager {
         printNodes();
     }
 
+    public void stop() {
+        stopped = true;
+    }
+
+    public void setOnNewNodeHandler(Updater onNewMember) {
+        this.onNewMember = onNewMember;
+    }
+
+    public void setOnFailedNodeHandler(Updater onFailedMember) {
+        this.onFailedMember = onFailedMember;
+    }
+
+    public void setOnRevivedNodeHandler(Updater onRevivedMember) {
+        this.onRevivedMember = onRevivedMember;
+    }
+
+    public void setOnRemoveNodeHandler(Updater onRemovedMember) {
+        this.onRemovedMember = onRemovedMember;
+    }
+
     private void printNodes() {
         new Thread(() -> {
             try {
@@ -111,6 +131,7 @@ public class NodeManager {
         }).start();
     }
 
+    // TODO: add handling to join the membership again if revived node is removed from membership list
     private void detectFailedNodes() {
         String[] keys = new String[members.size()];
         members.keySet().toArray(keys);
@@ -118,14 +139,28 @@ public class NodeManager {
             Node node = members.get(key);
             boolean hadFailed = node.hasFailed();
             node.checkIfFailed();
-            if(hadFailed != node.hasFailed()) {
-                if(node.hasFailed()) {
-                    if(onFailedMember != null) {
+            if (hadFailed != node.hasFailed()) {
+                if (node.hasFailed()) {
+                    if (onFailedMember != null) {
+                        // indicate to the interested party that a node has failed
+                        // this, like other Updaters will have update() overridden in main
+                        // that lets us customize how update() behaves
                         onFailedMember.update(node.getSocketAddress());
-                    } else {
-                        if(onRevivedMember != null) {
-                            onRevivedMember.update(node.getSocketAddress());
-                        }
+                    }
+                } else {
+                    // if had failed and has failed are different,
+                    // and the node right now is working, then we will indicate that the node
+                    // is working again (revived)
+                    if (onRevivedMember != null) {
+                        onRevivedMember.update(node.getSocketAddress());
+                    }
+                }
+            }
+            if (node.shouldCleanup()) {
+                synchronized (members) {
+                    members.remove(key);
+                    if (onRemovedMember != null) {
+                        onRemovedMember.update(node.getSocketAddress());
                     }
                 }
             }
@@ -146,7 +181,7 @@ public class NodeManager {
         Node member = members.get(sourceNode.getUniqueID());
 
         // update our member list with new node if not present in our list
-        if(member == null) {
+        if (member == null) {
             synchronized (members) {
                 sourceNode.setConfig(config);
                 sourceNode.setLastUpdatedTime();

@@ -55,7 +55,9 @@ public class Socket {
                 System.out.println("Received message from [" + source.getUniqueID() + "]");
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
-            } finally {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }finally {
                 objectInputStream.close();
                 return source;
             }
@@ -71,6 +73,8 @@ public class Socket {
 
         try {
             ObjectOutput out = new ObjectOutputStream(bstream);
+            out.writeObject(source);
+            out.close();
         } catch (IOException e) {
             System.out.println("Could not send " + source.getNetworkMessage() + "\n");
             System.out.println("Error: " + e.getMessage());

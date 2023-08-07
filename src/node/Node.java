@@ -66,15 +66,15 @@ public class Node implements Serializable {
 
     public void setLastUpdatedTime() {
         LocalDateTime updatedTime = LocalDateTime.now();
-        System.out.println("Node " + this.getUniqueID() + "at" + updatedTime);
+        System.out.println("Node " + this.getUniqueID() + " updated at " + updatedTime);
         lastUpdatedTime = updatedTime;
     }
 
     public void updateSequenceNumber(long newSequenceNumber) {
         if (newSequenceNumber > heartbeatSequenceNumber) {
-            heartbeatSequenceNumber = newSequenceNumber;
             System.out.println("Sequence number of current node " + this.getUniqueID() + " updated from "
                     + getSequenceNumber() + " to " + newSequenceNumber);
+            heartbeatSequenceNumber = newSequenceNumber;
         }
 
         setLastUpdatedTime();
@@ -100,6 +100,7 @@ public class Node implements Serializable {
         // failed = now.isAfter(failureTime);
     }
 
+    // implemented to let us know if we should remove node from membership list
     public boolean shouldCleanup() {
         if (failed) {
             Duration cleanupTimeout = config.nodeFailureTimeout.plus(config.nodeCleanupTimeout);
