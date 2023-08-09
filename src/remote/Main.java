@@ -52,7 +52,23 @@ public class Main {
 
         NodeManager initialNode = new NodeManager(listeningAddress, config);
 
-        // Set the handlers for node events (onFailedNodeHandler, onNewNodeHandler, etc.)
+        // this is where we override the update method from Updater to what we please
+        initialNode.setOnFailedNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort() + " has failed");
+        });
+        initialNode.setOnNewNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node added: " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort());
+        });
+        initialNode.setOnRemoveNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort() + " removed");
+        });
+        initialNode.setOnRevivedNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort() + " revived");
+        });
 
         initialNode.start();
     }
@@ -68,7 +84,23 @@ public class Main {
 
         NodeManager node = new NodeManager(listeningAddress, existingNodeAddress, config);
 
-        // Set the handlers for node events (onFailedNodeHandler, onNewNodeHandler, etc.)
+        // this is where we override the update method from Updater to what we please
+        node.setOnFailedNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort() + " has failed");
+        });
+        node.setOnNewNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node added: " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort());
+        });
+        node.setOnRemoveNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort() + " removed");
+        });
+        node.setOnRevivedNodeHandler((inetSocketAddress) -> {
+            System.out.println("Node " + inetSocketAddress.getHostName() + ":"
+                    + inetSocketAddress.getPort() + " revived");
+        });
 
         node.start();
     }

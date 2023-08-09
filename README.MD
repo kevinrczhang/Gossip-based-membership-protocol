@@ -1,7 +1,7 @@
 To test this software, first run:
 <br />
 ```
-javac -d ../out src/config/*.java src/remote/*.java src/service/*.java src/node/*.java
+javac -d ../out src/config/*.java src/remote/*.java src/service/*.java src/node/*.java src/message/*.java
 
 ```
 In your terminal to compile all the necessary java classes. Then, run 
