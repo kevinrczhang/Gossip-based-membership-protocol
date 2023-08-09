@@ -5,8 +5,8 @@ import config.Config;
 import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.time.LocalDateTime;
 import java.time.Duration;
+import java.time.LocalDateTime;
 
 //TODO: implement NAK operation (ask for newest messages if not received after period of time)
 public class Node implements Serializable {
@@ -123,10 +123,12 @@ public class Node implements Serializable {
     }
 
 
-    public void receiveHeartbeat() {
+    //public void receiveHeartbeat() {
         // Update the sequence number and last updated time
-        incrementSequenceNumber();
-        setLastUpdatedTime();
-    }
+        //incrementSequenceNumber();
+      //  setLastUpdatedTime();
+    //}
+
+
 
 }

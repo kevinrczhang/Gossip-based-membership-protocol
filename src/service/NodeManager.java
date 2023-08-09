@@ -1,6 +1,7 @@
 package service;
 
 import config.Config;
+import message.HeartbeatMessage;
 import node.Node;
 
 import java.net.InetSocketAddress;
@@ -56,10 +57,10 @@ public class NodeManager {
         startFailureDetectionThread();
         printNodes();
         // heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
-           //      2, //heartbeat interval
-              //   TimeUnit.MILLISECONDS);
+        //      2, //heartbeat interval
+        //   TimeUnit.MILLISECONDS);
     }
-
+/*
     private void sendHeartbeats() {
         // Iterate through the members and send heartbeat messages to each node
         System.out.println("Sending heartbeat to " + members.size() + " members");
@@ -69,10 +70,20 @@ public class NodeManager {
             }
         }
     }
+*/
+
 
     public void stopHeartbeats() {
         // Stop the heartbeat thread
         heartbeatExecutor.shutdown();
+    }
+
+    public ConcurrentHashMap<String, Node> getMembers() {
+        return members;
+    }
+
+    public Socket getSocketService() {
+        return socketService;
     }
 
     public void stop() {
@@ -222,6 +233,16 @@ public class NodeManager {
         }
     }
 
+    public void sendHeartbeats() {
+        HeartbeatMessage heartbeatMessage = new HeartbeatMessage(members, self.getSequenceNumber());
+        for (Node member : members.values()) {
+            if (!member.getUniqueID().equals(self.getUniqueID())) {
+                socketService.sendHeartbeat(member, heartbeatMessage);
+            }
+        }
+    }
+
+
     private void startSenderThread() {
         new Thread(() -> {
             while (!stopped) {
@@ -278,29 +299,36 @@ public class NodeManager {
     }
 
     private void receiveHeartbeatAndUpdateMembers() {
-        Node senderNode = socketService.receiveHeartbeat();
-        if (senderNode != null) {
-            updateMembership(senderNode); // Update membership list with the received sender node
+        HeartbeatMessage message = socketService.receiveHeartbeat();
+        if (message != null) {
+            updateMembership(message); // Update membership list with the received sender node
         }
     }
 
-    private void updateMembership(Node senderNode) {
+    private void updateMembership(HeartbeatMessage heartbeatMessage) {
         synchronized (members) {
-            if (!members.containsKey(senderNode.getUniqueID())) {
-                senderNode.setConfig(config);
-                senderNode.setLastUpdatedTime();
-                members.put(senderNode.getUniqueID(), senderNode);
-                // self.addMembersToSend(members);
-                // senderNode.addMembersToSend(members);
-                if (onNewMember != null) {
-                    onNewMember.update(senderNode.getSocketAddress());
+            ConcurrentHashMap<String, Node> receivedMembershipList = heartbeatMessage.getMembershipList();
+            long receivedSequenceNumber = heartbeatMessage.getSequenceNumber();
+
+            for (Node receivedNode : receivedMembershipList.values()) {
+                String nodeUniqueID = receivedNode.getUniqueID();
+
+                if (!members.containsKey(nodeUniqueID)) {
+                    // Add new node to the membership list
+                    receivedNode.setConfig(config);
+                    receivedNode.setLastUpdatedTime();
+                    members.put(nodeUniqueID, receivedNode);
+                    if (onNewMember != null) {
+                        onNewMember.update(receivedNode.getSocketAddress());
+                    }
+                } else {
+                    // Update the existing node's sequence number
+                    Node existingNode = members.get(nodeUniqueID);
+                    existingNode.updateSequenceNumber(receivedNode.getSequenceNumber());
                 }
-            } else {
-                // Update the existing node's sequence number
-                Node existingNode = members.get(senderNode.getUniqueID());
-                existingNode.updateSequenceNumber(senderNode.getSequenceNumber());
             }
+
+            self.updateSequenceNumber(receivedSequenceNumber);
         }
     }
-
 }
