@@ -55,13 +55,14 @@ public class NodeManager {
         startReceiverThread();
         startFailureDetectionThread();
         printNodes();
-        heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
-                2000, //heartbeat interval
-                TimeUnit.MILLISECONDS);
+        // heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
+           //      2, //heartbeat interval
+              //   TimeUnit.MILLISECONDS);
     }
 
     private void sendHeartbeats() {
         // Iterate through the members and send heartbeat messages to each node
+        System.out.println("Sending heartbeat to " + members.size() + " members");
         for (Node member : members.values()) {
             if (!member.getUniqueID().equals(self.getUniqueID())) {
                 socketService.sendHeartbeat(member, self);
@@ -225,6 +226,9 @@ public class NodeManager {
         new Thread(() -> {
             while (!stopped) {
                 sendGossipToRandomNode();
+                heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
+                        2000, //heartbeat interval
+                        TimeUnit.MILLISECONDS);
                 try {
                     Thread.sleep(config.updateFrequency.toMillis());
                 } catch (InterruptedException e) {
