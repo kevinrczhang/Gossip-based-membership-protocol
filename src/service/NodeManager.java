@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 // this is the logic where the protocol is implemented
 // the NodeManager is where nodes will be initialized, and where membership lists will be tracked
@@ -25,6 +28,7 @@ public class NodeManager {
     private Updater onFailedMember = null;
     private Updater onRemovedMember = null;
     private Updater onRevivedMember = null;
+    private ScheduledExecutorService heartbeatExecutor = Executors.newScheduledThreadPool(1);
 
     // constructor for when we initially add a node
     public NodeManager(InetSocketAddress inetSocketAddress, Config config) {
@@ -51,6 +55,23 @@ public class NodeManager {
         startReceiverThread();
         startFailureDetectionThread();
         printNodes();
+        heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
+                2000, //heartbeat interval
+                TimeUnit.MILLISECONDS);
+    }
+
+    private void sendHeartbeats() {
+        // Iterate through the members and send heartbeat messages to each node
+        for (Node member : members.values()) {
+            if (!member.getUniqueID().equals(self.getUniqueID())) {
+                socketService.sendHeartbeat(member, self);
+            }
+        }
+    }
+
+    public void stopHeartbeats() {
+        // Stop the heartbeat thread
+        heartbeatExecutor.shutdown();
     }
 
     public void stop() {
@@ -172,6 +193,7 @@ public class NodeManager {
         new Thread(() -> {
             while (!stopped) {
                 receivePeerMessage();
+                receiveHeartbeatAndUpdateMembers();
             }
         }).start();
     }
@@ -251,5 +273,30 @@ public class NodeManager {
 
     }
 
+    private void receiveHeartbeatAndUpdateMembers() {
+        Node senderNode = socketService.receiveHeartbeat();
+        if (senderNode != null) {
+            updateMembership(senderNode); // Update membership list with the received sender node
+        }
+    }
+
+    private void updateMembership(Node senderNode) {
+        synchronized (members) {
+            if (!members.containsKey(senderNode.getUniqueID())) {
+                senderNode.setConfig(config);
+                senderNode.setLastUpdatedTime();
+                members.put(senderNode.getUniqueID(), senderNode);
+                // self.addMembersToSend(members);
+                // senderNode.addMembersToSend(members);
+                if (onNewMember != null) {
+                    onNewMember.update(senderNode.getSocketAddress());
+                }
+            } else {
+                // Update the existing node's sequence number
+                Node existingNode = members.get(senderNode.getUniqueID());
+                existingNode.updateSequenceNumber(senderNode.getSequenceNumber());
+            }
+        }
+    }
 
 }

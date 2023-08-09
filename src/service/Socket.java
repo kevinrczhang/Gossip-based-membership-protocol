@@ -85,4 +85,57 @@ public class Socket {
         return bstream.toByteArray();
 
     }
+
+
+    // Inside Socket class
+    public void sendHeartbeat(Node target, Node self) {
+        byte[] bytes = getHeartbeatBytes(self);
+        sendHeartbeatMessage(target, bytes);
+    }
+
+    private byte[] getHeartbeatBytes(Node sender) {
+        ByteArrayOutputStream bstream = new ByteArrayOutputStream();
+        try {
+            ObjectOutput out = new ObjectOutputStream(bstream);
+            out.writeObject(sender); // Serialize the sender node to bytes
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bstream.toByteArray();
+    }
+
+    private void sendHeartbeatMessage(Node target, byte[] data) {
+        DatagramPacket packet = new DatagramPacket(data, data.length, target.getInetAddress(), target.getPort());
+        try {
+            dgSocket.send(packet); // Send the heartbeat message to the target node
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public Node receiveHeartbeat() {
+        try {
+            dgSocket.receive(receivePacket);
+            ObjectInputStream objectInputStream =
+                    new ObjectInputStream(new ByteArrayInputStream(receivePacket.getData()));
+            Node sender = null;
+
+            try {
+                sender = (Node) objectInputStream.readObject(); // Deserialize the sender node
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                objectInputStream.close();
+                return sender;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

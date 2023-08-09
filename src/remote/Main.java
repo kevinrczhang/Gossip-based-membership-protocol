@@ -13,9 +13,9 @@ public class Main {
         String existingNodeAddressStr;
         if (args.length != 3) {
             System.err.println("Usage: java Main <new_node_address> <new_node_port> <existing_node_address>");
-            listeningAddressStr = "127.0.0.1";
-            listeningPort = 8000;
-            existingNodeAddressStr = "127.0.0.1:8000";
+            listeningAddressStr = "251.251.241";
+            listeningPort = 0;
+            existingNodeAddressStr = "none";
         } else {
             listeningAddressStr = args[0];
             listeningPort = Integer.parseInt(args[1]);
@@ -47,7 +47,7 @@ public class Main {
                 Duration.ofSeconds(3),
                 Duration.ofMillis(4000),
                 Duration.ofMillis(4500),
-                3
+                1
         );
 
         NodeManager initialNode = new NodeManager(listeningAddress, config);
@@ -63,7 +63,7 @@ public class Main {
                 Duration.ofSeconds(3),
                 Duration.ofMillis(4000),
                 Duration.ofMillis(4500),
-                3
+                1
         );
 
         NodeManager node = new NodeManager(listeningAddress, existingNodeAddress, config);

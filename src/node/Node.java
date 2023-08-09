@@ -123,4 +123,10 @@ public class Node implements Serializable {
     }
 
 
+    public void receiveHeartbeat() {
+        // Update the sequence number and last updated time
+        incrementSequenceNumber();
+        setLastUpdatedTime();
+    }
+
 }
