@@ -13,8 +13,8 @@ public class Main {
         String existingNodeAddressStr;
         if (args.length != 3) {
             System.err.println("Usage: java Main <new_node_address> <new_node_port> <existing_node_address>");
-            listeningAddressStr = "251.251.241";
-            listeningPort = 0;
+            listeningAddressStr = "127.0.0.1";
+            listeningPort = 8080;
             existingNodeAddressStr = "none";
         } else {
             listeningAddressStr = args[0];
