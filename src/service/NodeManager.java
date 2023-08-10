@@ -1,9 +1,9 @@
 package service;
 
 import config.Config;
-import message.HeartbeatMessage;
 import node.Node;
 
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,12 +11,11 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 // this is the logic where the protocol is implemented
 // the NodeManager is where nodes will be initialized, and where membership lists will be tracked
 // it maintains the cluster of nodes
-public class NodeManager {
+public class NodeManager implements Serializable {
     public final InetSocketAddress inetSocketAddress;
     private Node self = null;
     private Socket socketService;
@@ -204,7 +203,7 @@ public class NodeManager {
     private void startReceiverThread() {
         new Thread(() -> {
             while (!stopped) {
-                receivePeerMessage();
+                // receivePeerMessage();
                 receiveHeartbeatAndUpdateMembers();
             }
         }).start();
@@ -233,23 +232,38 @@ public class NodeManager {
         }
     }
 
+    //TODO: implement random instead of all-to-all
     public void sendHeartbeats() {
-        HeartbeatMessage heartbeatMessage = new HeartbeatMessage(members, self.getSequenceNumber());
+        System.out.println("Sending heartbeats to members...");
+        String[] list = convertConcurrentToArray(members);
+        // HeartbeatMessage heartbeatMessage = new HeartbeatMessage(list, self.getSequenceNumber());
         for (Node member : members.values()) {
             if (!member.getUniqueID().equals(self.getUniqueID())) {
-                socketService.sendHeartbeat(member, heartbeatMessage);
+                socketService.sendHeartbeat(member, list);
             }
         }
     }
 
+    public String[] convertConcurrentToArray(ConcurrentHashMap<String, Node> concMap) {
+        ArrayList<String> addressList = new ArrayList<>();
+        for (Node node : concMap.values()) {
+            addressList.add(node.getInetAddress().toString() + ":" + Integer.toString(node.getPort()));
+        }
+
+        // Convert the ArrayList to a String array
+        String[] addressArray = addressList.toArray(new String[0]);
+
+        return addressArray;
+    }
 
     private void startSenderThread() {
         new Thread(() -> {
             while (!stopped) {
-                sendGossipToRandomNode();
-                heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
-                        2000, //heartbeat interval
-                        TimeUnit.MILLISECONDS);
+                // sendGossipToRandomNode();
+                // heartbeatExecutor.scheduleAtFixedRate(this::sendHeartbeats, 0,
+                   //     5000, //heartbeat interval
+                     //   TimeUnit.MILLISECONDS);
+                sendHeartbeats();
                 try {
                     Thread.sleep(config.updateFrequency.toMillis());
                 } catch (InterruptedException e) {
@@ -299,18 +313,46 @@ public class NodeManager {
     }
 
     private void receiveHeartbeatAndUpdateMembers() {
-        HeartbeatMessage message = socketService.receiveHeartbeat();
+        String[] message = socketService.receiveHeartbeat();
         if (message != null) {
             updateMembership(message); // Update membership list with the received sender node
         }
     }
 
-    private void updateMembership(HeartbeatMessage heartbeatMessage) {
+    private void updateMembership(String[] heartbeatMessage) {
+        for (String address : heartbeatMessage) {
+            Node node = createNodeFromAddress(address); // Assuming you have a method to convert the address string to a Node object
+            if (!node.equals(self) && !members.containsKey(node.getUniqueID())) {
+                members.put(node.getUniqueID(), node);
+                System.out.println("Added new member: " + node.getUniqueID());
+            }
+        }
+    }
+
+    private Node createNodeFromAddress(String address) {
+        String[] parts = address.split(":");
+        if (parts.length != 2) {
+            // Handle invalid address format
+            return null;
+        }
+
+        String host = parts[0].substring(1); // Remove leading "/"
+        int port = Integer.parseInt(parts[1]);
+
+        // Create and return a new Node object
+        return new Node(host, port, self.getConfig());
+    }
+
+    /*
+        private void updateMembership(String[] heartbeatMessage) {
+        System.out.println("Heartbeat received: " + Arrays.toString(heartbeatMessage));
+        /*
         synchronized (members) {
-            ConcurrentHashMap<String, Node> receivedMembershipList = heartbeatMessage.getMembershipList();
+            //ConcurrentHashMap<String, String> receivedMembershipList = heartbeatMessage.getMembershipList();
+            //System.out.println(receivedMembershipList.size());
             long receivedSequenceNumber = heartbeatMessage.getSequenceNumber();
 
-            for (Node receivedNode : receivedMembershipList.values()) {
+            for (Node receivedNode : members.values()) {
                 String nodeUniqueID = receivedNode.getUniqueID();
 
                 if (!members.containsKey(nodeUniqueID)) {
@@ -329,6 +371,8 @@ public class NodeManager {
             }
 
             self.updateSequenceNumber(receivedSequenceNumber);
+
         }
-    }
+}
+     */
 }

@@ -45,7 +45,7 @@ public class Main {
         Config config = new Config(
                 Duration.ofSeconds(4),
                 Duration.ofSeconds(3),
-                Duration.ofMillis(4000),
+                Duration.ofMillis(6000),
                 Duration.ofMillis(4500),
                 1
         );

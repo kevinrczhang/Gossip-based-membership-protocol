@@ -1,6 +1,5 @@
 package service;
 
-import message.HeartbeatMessage;
 import node.Node;
 
 import java.io.*;
@@ -8,7 +7,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
-public class Socket {
+public class Socket implements Serializable {
     private DatagramSocket dgSocket;
     private byte[] receivedBuffer = new byte[1024];
     private DatagramPacket receivePacket =
@@ -29,12 +28,14 @@ public class Socket {
     // from a driver code perspective, "source" will be the node itself(self)
     public void sendGossip(Node target, Node source) {
         byte[] bytes = getBytesToWrite(source);
-        sendGossipMessage(target, bytes);
+        // sendGossipMessage(target, bytes);
     }
 
     private void sendGossipMessage(Node target, byte[] data) {
         DatagramPacket packet = new DatagramPacket(data, data.length, target.getInetAddress(),
                 target.getPort());
+        System.out.println(packet.getLength());
+        // DatagramPacket packet = new DatagramPacket(data, data.length);
         try {
             System.out.println("Sending gossip message to [" + target.getUniqueID() + "]");
             dgSocket.send(packet);
@@ -89,45 +90,24 @@ public class Socket {
     }
 
     // new version: to send out HeartbeatMessage that contains node AND membership list
-    private byte[] getBytesToWrite(HeartbeatMessage heartbeatMessage) {
+    private byte[] getBytesToWrite(String[] list) {
         ByteArrayOutputStream bstream = new ByteArrayOutputStream();
         try {
             ObjectOutputStream out = new ObjectOutputStream(bstream);
-            out.writeObject(heartbeatMessage);
+            out.writeObject(list);
             out.close();
         } catch (IOException e) {
             System.out.println("Could not send heartbeat message");
             e.printStackTrace();
         }
+        // System.out.println(bstream.toByteArray());
         return bstream.toByteArray();
     }
 
 
-    public void sendHeartbeat(Node target, HeartbeatMessage heartbeatMessage) {
-        byte[] bytes = getBytesToWrite(heartbeatMessage);
+    public void sendHeartbeat(Node target, String[] list) {
+        byte[] bytes = getBytesToWrite(list);
         sendGossipMessage(target, bytes);
-    }
-
-    private byte[] getHeartbeatBytes(Node sender) {
-        ByteArrayOutputStream bstream = new ByteArrayOutputStream();
-        try {
-            ObjectOutput out = new ObjectOutputStream(bstream);
-            out.writeObject(sender); // Serialize the sender node to bytes
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return bstream.toByteArray();
-    }
-
-    private void sendHeartbeatMessage(Node target, byte[] data) {
-        DatagramPacket packet = new DatagramPacket(data, data.length, target.getInetAddress(), target.getPort());
-        try {
-            dgSocket.send(packet); // Send the heartbeat message to the target node
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     /*
@@ -154,13 +134,18 @@ public class Socket {
         return null;
     }
      */
-    public HeartbeatMessage receiveHeartbeat() {
+    public String[] receiveHeartbeat() {
         try {
+
             dgSocket.receive(receivePacket);
-            ObjectInputStream objectInputStream = new ObjectInputStream(
-                    new ByteArrayInputStream(receivePacket.getData()));
+            byte[] data = receivePacket.getData();
+            // System.out.println(Arrays.toString(data));
+            ObjectInputStream objectInputStream =
+                    new ObjectInputStream(new ByteArrayInputStream(receivePacket.getData()));
+            String[] heartbeatMessage;
             try {
-                HeartbeatMessage heartbeatMessage = (HeartbeatMessage) objectInputStream.readObject();
+                heartbeatMessage = (String[]) objectInputStream.readObject();
+                System.out.println("Heartbeat message received");
                 return heartbeatMessage;
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();

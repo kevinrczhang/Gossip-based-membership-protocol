@@ -36,8 +36,18 @@ public class Node implements Serializable {
         setLastUpdatedTime();
     }
 
+    public Node(String host, int port, Config config) {
+        address = new InetSocketAddress(host, port);
+        this.config = config;
+        this.setLastUpdatedTime();
+    }
+
     public void setConfig(Config config) {
         this.config = config;
+    }
+
+    public Config getConfig() {
+        return config;
     }
 
     public String getAddress() {
@@ -122,12 +132,6 @@ public class Node implements Serializable {
                 " - " + heartbeatSequenceNumber + "]";
     }
 
-
-    //public void receiveHeartbeat() {
-    // Update the sequence number and last updated time
-    //incrementSequenceNumber();
-    //  setLastUpdatedTime();
-    //}
 
 
 }
